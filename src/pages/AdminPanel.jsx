@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LayoutDashboard, Users as UsersIcon, Swords, Trophy, DollarSign, Settings, Plus, Search, Edit2, Trash2, XCircle, Play, Square, Key, Award, CheckCircle, X, Eye } from 'lucide-react';
+import { LayoutDashboard, Users as UsersIcon, Swords, Trophy, DollarSign, Settings, Plus, Search, Edit2, Trash2, XCircle, Play, Square, Key, Award, CheckCircle, X, Eye, Send } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import CreateTournamentModal from '../components/CreateTournamentModal';
 import './AdminPanel.css';
@@ -48,10 +48,10 @@ const AdminPanel = () => {
 
     // Derived stats from real data
     const stats = [
-        { title: "Total Users", value: users.length || "0", icon: <UsersIcon size={24} />, color: "text-primary" },
+        { title: "Total Tournaments", value: tournaments.length || "0", icon: <Swords size={24} />, color: "text-primary" },
         { title: "Active Tournaments", value: tournaments.filter(t => t.status === 'upcoming' || t.status === 'live').length || "0", icon: <Swords size={24} />, color: "text-warning" },
         { title: "Matches Completed", value: tournaments.filter(t => t.status === 'completed').length || "0", icon: <Trophy size={24} />, color: "text-success" },
-        { title: "Total Payments", value: payments.length || "0", icon: <DollarSign size={24} />, color: "text-secondary" },
+        { title: "Players Joined", value: entries.length || "0", icon: <UsersIcon size={24} />, color: "text-secondary" },
     ];
 
     return (
@@ -76,6 +76,9 @@ const AdminPanel = () => {
                         </button>
                         <button className={`admin-nav-link ${activeTab === 'results' ? 'active' : ''}`} onClick={() => setActiveTab('results')}>
                             <Trophy size={18} /> Match Results
+                        </button>
+                        <button className={`admin-nav-link ${activeTab === 'submissions' ? 'active' : ''}`} onClick={() => setActiveTab('submissions')}>
+                            <Send size={18} /> UID Submissions
                         </button>
                     </nav>
                 </aside>
@@ -301,21 +304,26 @@ const AdminPanel = () => {
                                 <table className="admin-table">
                                     <thead>
                                         <tr>
-                                            <th>User ID</th>
+                                            <th>Player Name</th>
                                             <th>Free Fire UID</th>
                                             <th>Tournament</th>
-                                            <th>Time</th>
+                                            <th>Submission Time</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {uidSubmissions.map(s => (
                                             <tr key={s.id}>
-                                                <td>{s.userId}</td>
+                                                <td className="font-bold">{s.playerName || s.username || "N/A"}</td>
                                                 <td className="text-gradient font-bold">{s.freeFireUID}</td>
                                                 <td>{tournaments.find(t => t.id === s.tournamentId)?.name || 'Unknown'}</td>
                                                 <td>{new Date(s.submitTime).toLocaleString()}</td>
                                             </tr>
                                         ))}
+                                        {uidSubmissions.length === 0 && (
+                                            <tr>
+                                                <td colSpan="4" className="text-center py-4 text-muted">No UID submissions found yet.</td>
+                                            </tr>
+                                        )}
                                     </tbody>
                                 </table>
                             </div>

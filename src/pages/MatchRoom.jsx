@@ -1,16 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Copy, ShieldAlert, Timer, CheckCircle, Smartphone, Lock, Trophy, Medal } from 'lucide-react';
+import { Copy, ShieldAlert, Timer, CheckCircle, Smartphone, Lock, Trophy, Medal, Send } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import './MatchRoom.css';
 
 const MatchRoom = () => {
     const { id } = useParams();
-    const { tournaments, entries } = useApp();
+    const { tournaments, entries, submitLateUID } = useApp();
 
     const [copiedId, setCopiedId] = useState(false);
     const [copiedPass, setCopiedPass] = useState(false);
     const [currentTime, setCurrentTime] = useState(Date.now());
+
+    // UID Submission State
+    const [uidForm, setUidForm] = useState({ name: '', uid: '' });
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submitted, setSubmitted] = useState(false);
 
     // Find real tournament
     const tournament = tournaments.find(t => String(t.id) === String(id));
@@ -49,6 +54,22 @@ const MatchRoom = () => {
         } else {
             setCopiedPass(true);
             setTimeout(() => setCopiedPass(false), 2000);
+        }
+    };
+
+    const handleUidSubmit = async (e) => {
+        e.preventDefault();
+        if (!uidForm.name || !uidForm.uid) return alert("Please fill all fields");
+
+        setIsSubmitting(true);
+        const success = await submitLateUID(id, `user_${Date.now()}`, uidForm.name, uidForm.uid);
+        setIsSubmitting(false);
+
+        if (success) {
+            setSubmitted(true);
+            setUidForm({ name: '', uid: '' });
+        } else {
+            alert("Failed to submit UID. Please try again.");
         }
     };
 
@@ -164,34 +185,85 @@ const MatchRoom = () => {
                             )}
                         </div>
 
-                        {/* Instructions Card */}
-                        <div className="glass-panel room-card instructions-card">
-                            <h3 className="card-title mb-4 flex align-center"><ShieldAlert size={24} className="mr-2 text-warning" /> Instructions</h3>
-                            <div className="instruction-step">
-                                <div className="step-number">1</div>
-                                <div className="step-details">
-                                    <h4>Copy Room ID</h4>
-                                    <p className="text-muted text-sm">Copy the ID and paste it in Free Fire Custom Game search.</p>
+                        {/* UID SUBMISSION PANEL (New feature) */}
+                        {isReleased && !isCompleted && (
+                            <div className="glass-panel room-card uid-submission-card fade-in">
+                                <h3 className="card-title mb-4 flex align-center text-primary">
+                                    <Send size={24} className="mr-2" /> Final UID Submission
+                                </h3>
+
+                                {submitted ? (
+                                    <div className="text-center py-5">
+                                        <CheckCircle size={48} className="text-success mx-auto mb-3" />
+                                        <h4 className="text-success">UID Submitted Successfully!</h4>
+                                        <p className="text-muted text-sm mt-2">The admin will verify your entry shortly.</p>
+                                    </div>
+                                ) : (
+                                    <form onSubmit={handleUidSubmit}>
+                                        <p className="text-sm text-muted mb-4">Please submit your Free Fire UID again for final verification.</p>
+                                        <div className="form-group mb-3">
+                                            <label className="text-xs text-muted mb-1 d-block uppercase">Registered Name</label>
+                                            <input
+                                                type="text"
+                                                className="w-100 bg-dark-soft border-secondary p-2 rounded text-white"
+                                                placeholder="Enter your name"
+                                                required
+                                                value={uidForm.name}
+                                                onChange={(e) => setUidForm({ ...uidForm, name: e.target.value })}
+                                            />
+                                        </div>
+                                        <div className="form-group mb-4">
+                                            <label className="text-xs text-muted mb-1 d-block uppercase">Free Fire UID</label>
+                                            <input
+                                                type="text"
+                                                className="w-100 bg-dark-soft border-secondary p-2 rounded text-white"
+                                                placeholder="Enter FF UID"
+                                                required
+                                                value={uidForm.uid}
+                                                onChange={(e) => setUidForm({ ...uidForm, uid: e.target.value })}
+                                            />
+                                        </div>
+                                        <button
+                                            type="submit"
+                                            className="btn btn-primary w-100"
+                                            disabled={isSubmitting}
+                                        >
+                                            {isSubmitting ? 'Submitting...' : 'Submit UID Now'}
+                                        </button>
+                                    </form>
+                                )}
+                            </div>
+                        )}
+
+                        {!isReleased && (
+                            <div className="glass-panel room-card instructions-card">
+                                <h3 className="card-title mb-4 flex align-center"><ShieldAlert size={24} className="mr-2 text-warning" /> Instructions</h3>
+                                <div className="instruction-step">
+                                    <div className="step-number">1</div>
+                                    <div className="step-details">
+                                        <h4>Copy Room ID</h4>
+                                        <p className="text-muted text-sm">Copy the ID and paste it in Free Fire Custom Game search.</p>
+                                    </div>
+                                </div>
+                                <div className="instruction-step">
+                                    <div className="step-number">2</div>
+                                    <div className="step-details">
+                                        <h4>Enter Password</h4>
+                                        <p className="text-muted text-sm">Enter the password exactly as shown to enter the room.</p>
+                                    </div>
+                                </div>
+                                <div className="instruction-step">
+                                    <div className="step-number">3</div>
+                                    <div className="step-details">
+                                        <h4>Ready Up</h4>
+                                        <p className="text-muted text-sm">Join your assigned slot and wait for the host to start.</p>
+                                    </div>
+                                </div>
+                                <div className="warning-box mt-4">
+                                    <strong>WARNING:</strong> sharing room details with unregistered players will result in a permanent ban.
                                 </div>
                             </div>
-                            <div className="instruction-step">
-                                <div className="step-number">2</div>
-                                <div className="step-details">
-                                    <h4>Enter Password</h4>
-                                    <p className="text-muted text-sm">Enter the password exactly as shown to enter the room.</p>
-                                </div>
-                            </div>
-                            <div className="instruction-step">
-                                <div className="step-number">3</div>
-                                <div className="step-details">
-                                    <h4>Ready Up</h4>
-                                    <p className="text-muted text-sm">Join your assigned slot and wait for the host to start.</p>
-                                </div>
-                            </div>
-                            <div className="warning-box mt-4">
-                                <strong>WARNING:</strong> sharing room details with unregistered players will result in a permanent ban.
-                            </div>
-                        </div>
+                        )}
                     </div>
                 )}
             </div>

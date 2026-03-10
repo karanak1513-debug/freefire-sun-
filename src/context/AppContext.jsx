@@ -138,12 +138,22 @@ export const AppProvider = ({ children }) => {
         await updateDoc(doc(db, 'users', uId), { status: status === 'Active' ? 'Banned' : 'Active' });
     };
 
+    const submitLateUID = async (tournamentId, userId, username, freeFireUID) => {
+        try {
+            await addDoc(collection(db, 'uid_submissions'), { tournamentId, userId, playerName: username, freeFireUID, submitTime: Date.now() });
+            return true;
+        } catch (error) {
+            console.error(error);
+            return false;
+        }
+    };
+
     return (
         <AppContext.Provider value={{
             tournaments, users, entries, payments, uidSubmissions,
             joinTournament, createTournament, updateRoomDetails,
             approvePayment, rejectPayment, startMatch, endMatch: endWithWinners,
-            deleteTournament, deleteUser, toggleUserStatus
+            deleteTournament, deleteUser, toggleUserStatus, submitLateUID
         }}>
             {children}
         </AppContext.Provider>
