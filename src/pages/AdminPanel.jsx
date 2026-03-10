@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LayoutDashboard, Users as UsersIcon, Swords, Trophy, DollarSign, Settings, Plus, Search, Edit2, Trash2, XCircle, Play, Square, Key, Award, CheckCircle, X, Eye, Send } from 'lucide-react';
+import { LayoutDashboard, Users as UsersIcon, Swords, Trophy, DollarSign, Settings, Plus, Search, Edit2, Trash2, XCircle, Play, Square, Key, Award, CheckCircle, X, Eye, Send, Shield } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 import CreateTournamentModal from '../components/CreateTournamentModal';
@@ -18,6 +18,7 @@ const AdminPanel = () => {
         users,
         deleteUser,
         toggleUserStatus,
+        promoteToAdmin,
         startMatch,
         endMatch,
         payments,
@@ -25,17 +26,30 @@ const AdminPanel = () => {
         uidSubmissions,
         updateRoomDetails,
         approvePayment,
-        rejectPayment
+        rejectPayment,
+        sendRoomMessage
     } = useApp();
 
     const { userData, logout } = useAuth();
+
+    const [adminChatMsg, setAdminChatMsg] = useState('');
+
+    const handleSendAdminMessage = (tId) => {
+        const msg = prompt("Enter announcement for players:");
+        if (msg) {
+            sendRoomMessage(tId, {
+                sender: "Admin",
+                text: msg,
+                role: "admin"
+            });
+        }
+    };
 
     const handleSetRoom = (tId) => {
         const roomId = prompt("Enter Room ID:");
         const roomPass = prompt("Enter Room Password:");
         if (roomId && roomPass) {
             updateRoomDetails(tId, roomId, roomPass);
-            alert("Room details updated successfully!");
         }
     };
 
@@ -44,7 +58,6 @@ const AdminPanel = () => {
         if (!winnersData.first) return alert("At least winner is required.");
 
         endMatch(selectedTournament.id, winnersData);
-        alert(`Results saved for ${selectedTournament.name}!`);
         setSelectedTournament(null);
         setWinnersData({ first: '', second: '', third: '' });
     };
@@ -151,6 +164,7 @@ const AdminPanel = () => {
                                                     <div className="d-flex gap-2">
                                                         <button className="btn-link text-success" onClick={() => startMatch(t.id)} title="Start Match"><Play size={16} /></button>
                                                         <button className="btn-link text-warning" onClick={() => handleSetRoom(t.id)} title="Set Room Credentials"><Key size={16} /></button>
+                                                        <button className="btn-link text-info" onClick={() => handleSendAdminMessage(t.id)} title="Send Live Announcement"><Send size={16} /></button>
                                                         <button className="btn-link text-danger" onClick={() => endMatch(t.id)} title="End Match"><Square size={16} /></button>
                                                         <button className="btn-link text-muted" onClick={() => { if (window.confirm('Delete?')) deleteTournament(t.id) }}><Trash2 size={16} /></button>
                                                     </div>
@@ -184,8 +198,9 @@ const AdminPanel = () => {
                                                 <td>{u.role || 'Player'}</td>
                                                 <td><span className={`status-badge ${u.status === 'Active' ? 'success' : 'danger'}`}>{u.status || 'Active'}</span></td>
                                                 <td>
-                                                    <button className="btn-link text-danger mr-2" onClick={() => toggleUserStatus(u.id, u.status || 'Active')}><XCircle size={16} /></button>
-                                                    <button className="btn-link text-muted" onClick={() => deleteUser(u.id)}><Trash2 size={16} /></button>
+                                                    <button className="btn-link text-warning mr-2" onClick={() => promoteToAdmin(u.id, u.role || 'player')} title="Toggle Admin"><Shield size={16} /></button>
+                                                    <button className="btn-link text-danger mr-2" onClick={() => toggleUserStatus(u.id, u.status || 'Active')} title="Toggle Ban"><XCircle size={16} /></button>
+                                                    <button className="btn-link text-muted" onClick={() => deleteUser(u.id)} title="Delete User"><Trash2 size={16} /></button>
                                                 </td>
                                             </tr>
                                         ))}

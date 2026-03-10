@@ -5,10 +5,15 @@ import { useApp } from '../context/AppContext';
 import './Home.css';
 
 const Home = () => {
-    const { tournaments } = useApp();
+    const { tournaments, users } = useApp();
     const liveMatches = tournaments.filter(t => t.status === 'live');
     const upcomingMatches = tournaments.filter(t => t.status === 'upcoming');
     const completedMatches = tournaments.filter(t => t.status === 'completed');
+
+    // Calculate total prizes for display
+    const totalPrizesCount = completedMatches.length * 500; // Mock calculation based on match count
+    const totalPlayersCount = users.length > 0 ? users.length + 50 : 0;
+    const totalMatchesCount = tournaments.length;
 
     const TournamentCard = ({ t }) => (
         <div key={t.id} className="tournament-card glass-panel">
@@ -95,16 +100,16 @@ const Home = () => {
 
                     <div className="hero-stats glass-panel">
                         <div className="stat-item">
-                            <h4>10K+</h4>
+                            <h4>{totalPlayersCount}+</h4>
                             <p>Active Players</p>
                         </div>
                         <div className="stat-item">
-                            <h4>₹50L+</h4>
+                            <h4>₹{totalPrizesCount}+</h4>
                             <p>Prizes Won</p>
                         </div>
                         <div className="stat-item">
-                            <h4>500+</h4>
-                            <p>Daily Matches</p>
+                            <h4>{totalMatchesCount}+</h4>
+                            <p>Matches Hosted</p>
                         </div>
                     </div>
                 </div>

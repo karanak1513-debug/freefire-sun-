@@ -1,19 +1,38 @@
 import React, { useState } from 'react';
 import { Medal, Trophy, Crosshair, Users } from 'lucide-react';
+import { useApp } from '../context/AppContext';
 import './Leaderboard.css';
 
 const Leaderboard = () => {
+    const { users } = useApp();
     const [activeTab, setActiveTab] = useState('global');
 
-    // Dummy data
-    const players = [
-        { rank: 1, name: "TSG_Legend", uid: "12345678", points: 15420, kills: 1450, winRate: "35%", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" },
-        { rank: 2, name: "Gyan_Sujan", uid: "87654321", points: 14200, kills: 1320, winRate: "32%", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sujan" },
-        { rank: 3, name: "Total_Gaming", uid: "45678912", points: 13800, kills: 1250, winRate: "28%", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Ajjubhai" },
-        { rank: 4, name: "Desi_Gamers", uid: "78912345", points: 12500, kills: 1100, winRate: "25%", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Amit" },
-        { rank: 5, name: "Lokesh_Gamer", uid: "34567890", points: 11900, kills: 980, winRate: "22%", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Lokesh" },
-        { rank: 6, name: "Two_Side_Gamers", uid: "90123456", points: 10500, kills: 850, winRate: "20%", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Jash" },
-    ];
+    // Filter and sort players from real data
+    const players = [...users]
+        .map((u, index) => ({
+            rank: index + 1,
+            name: u.username || u.name || "Unknown",
+            uid: u.freeFireUID || u.ffUid || "N/A",
+            points: u.points || 0,
+            kills: u.kills || 0,
+            winRate: u.winRate || "0%",
+            avatar: u.profilePhoto || `https://api.dicebear.com/7.x/avataaars/svg?seed=${u.userId || index}`
+        }))
+        .sort((a, b) => b.points - a.points || b.kills - a.kills)
+        .map((p, i) => ({ ...p, rank: i + 1 }));
+
+    if (players.length === 0) {
+        return (
+            <div className="leaderboard-page">
+                <div className="container py-10 text-center">
+                    <Trophy size={64} className="mx-auto mb-4 opacity-20" />
+                    <h2>No rankings available yet.</h2>
+                    <p className="text-muted">Start playing to appear on the leaderboard!</p>
+                </div>
+            </div>
+        );
+    }
+
 
     return (
         <div className="leaderboard-page">
@@ -41,34 +60,40 @@ const Leaderboard = () => {
                 <div className="podium-section">
                     <div className="podium-wrapper">
                         {/* Rank 2 */}
-                        <div className="podium-item rank-2 glass-panel">
-                            <div className="podium-avatar">
-                                <img src={players[1].avatar} alt={players[1].name} />
-                                <div className="rank-badge silver">2</div>
+                        {players[1] && (
+                            <div className="podium-item rank-2 glass-panel">
+                                <div className="podium-avatar">
+                                    <img src={players[1].avatar} alt={players[1].name} />
+                                    <div className="rank-badge silver">2</div>
+                                </div>
+                                <h3 className="player-name">{players[1].name}</h3>
+                                <p className="player-points text-gradient">{players[1].points} pts</p>
                             </div>
-                            <h3 className="player-name">{players[1].name}</h3>
-                            <p className="player-points text-gradient">{players[1].points} pts</p>
-                        </div>
+                        )}
 
                         {/* Rank 1 */}
-                        <div className="podium-item rank-1 glass-panel">
-                            <div className="podium-avatar">
-                                <img src={players[0].avatar} alt={players[0].name} className="glow-gold" />
-                                <div className="rank-badge gold"><Medal size={16} /> 1</div>
+                        {players[0] && (
+                            <div className="podium-item rank-1 glass-panel">
+                                <div className="podium-avatar">
+                                    <img src={players[0].avatar} alt={players[0].name} className="glow-gold" />
+                                    <div className="rank-badge gold"><Medal size={16} /> 1</div>
+                                </div>
+                                <h3 className="player-name glow-text">{players[0].name}</h3>
+                                <p className="player-points text-gradient font-bold" style={{ fontSize: '1.25rem' }}>{players[0].points} pts</p>
                             </div>
-                            <h3 className="player-name glow-text">{players[0].name}</h3>
-                            <p className="player-points text-gradient font-bold" style={{ fontSize: '1.25rem' }}>{players[0].points} pts</p>
-                        </div>
+                        )}
 
                         {/* Rank 3 */}
-                        <div className="podium-item rank-3 glass-panel">
-                            <div className="podium-avatar">
-                                <img src={players[2].avatar} alt={players[2].name} />
-                                <div className="rank-badge bronze">3</div>
+                        {players[2] && (
+                            <div className="podium-item rank-3 glass-panel">
+                                <div className="podium-avatar">
+                                    <img src={players[2].avatar} alt={players[2].name} />
+                                    <div className="rank-badge bronze">3</div>
+                                </div>
+                                <h3 className="player-name">{players[2].name}</h3>
+                                <p className="player-points text-gradient">{players[2].points} pts</p>
                             </div>
-                            <h3 className="player-name">{players[2].name}</h3>
-                            <p className="player-points text-gradient">{players[2].points} pts</p>
-                        </div>
+                        )}
                     </div>
                 </div>
 

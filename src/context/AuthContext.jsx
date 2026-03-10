@@ -17,7 +17,11 @@ const AuthContext = createContext();
 
 export const useAuth = () => useContext(AuthContext);
 
-const ADMIN_EMAIL = 'firefire2674543015@gmail.com'; // Admin from previous version
+// Root Admin Emails - Users with these emails bypass regular role checks
+const ADMIN_EMAILS = [
+    'firefire2674543015@gmail.com',
+    'karanak1513@gmail.com',
+];
 
 export const AuthProvider = ({ children }) => {
     const [currentUser, setCurrentUser] = useState(null);
@@ -32,20 +36,39 @@ export const AuthProvider = ({ children }) => {
         const userSnap = await getDoc(userRef);
         
         if (userSnap.exists()) {
-            setUserData(userSnap.data());
+            const data = userSnap.data();
+            // Force role to admin if in hardcoded list
+            if (ADMIN_EMAILS.includes(user.email) && data.role !== 'admin') {
+                const updatedData = { ...data, role: 'admin' };
+                await setDoc(userRef, { role: 'admin' }, { merge: true });
+                setUserData(updatedData);
+            } else {
+                setUserData(data);
+            }
         } else {
             const newUser = {
                 uid: user.uid,
                 email: user.email,
                 username: user.displayName || user.email.split('@')[0],
                 profilePhoto: user.photoURL || '',
-                role: user.email === ADMIN_EMAIL ? 'admin' : 'user',
+                role: ADMIN_EMAILS.includes(user.email) ? 'admin' : 'user',
                 status: 'Active',
-                joinedAt: serverTimestamp()
+                joinedAt: serverTimestamp(),
+                realName: '',
+                freeFireUID: '',
+                gameName: '',
+                phone: ''
             };
             await setDoc(userRef, newUser);
             setUserData(newUser);
         }
+    };
+
+    const updateUserData = async (newData) => {
+        if (!currentUser) return;
+        const userRef = doc(db, 'users', currentUser.uid);
+        await setDoc(userRef, newData, { merge: true });
+        setUserData(prev => ({ ...prev, ...newData }));
     };
 
     useEffect(() => {
@@ -53,7 +76,7 @@ export const AuthProvider = ({ children }) => {
             setCurrentUser(user);
             if (user) {
                 await syncUserData(user);
-                setIsAdmin(user.email === ADMIN_EMAIL);
+                // The role will be set in syncUserData or fetched from Firestore
             } else {
                 setUserData(null);
                 setIsAdmin(false);
@@ -62,6 +85,14 @@ export const AuthProvider = ({ children }) => {
         });
         return unsubscribe;
     }, []);
+
+    useEffect(() => {
+        if (userData) {
+            setIsAdmin(userData.role === 'admin' || ADMIN_EMAILS.includes(currentUser?.email));
+        } else {
+            setIsAdmin(false);
+        }
+    }, [userData, currentUser]);
 
     const signup = async (email, password, username) => {
         const res = await createUserWithEmailAndPassword(auth, email, password);
@@ -87,7 +118,8 @@ export const AuthProvider = ({ children }) => {
         login,
         googleLogin,
         logout,
-        resetPassword
+        resetPassword,
+        updateUserData
     };
 
     return (

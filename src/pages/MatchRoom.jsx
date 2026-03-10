@@ -5,8 +5,8 @@ import { useApp } from '../context/AppContext';
 import './MatchRoom.css';
 
 const MatchRoom = () => {
-    const { id } = useParams();
-    const { tournaments, entries, submitLateUID } = useApp();
+    const { id: matchId } = useParams();
+    const { tournaments, entries, submitLateUID, liveMessages, sendRoomMessage } = useApp();
 
     const [copiedId, setCopiedId] = useState(false);
     const [copiedPass, setCopiedPass] = useState(false);
@@ -17,8 +17,12 @@ const MatchRoom = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
 
+    // Chat State
+    const [chatMsg, setChatMsg] = useState('');
+    const roomMessages = liveMessages[matchId] ? Object.values(liveMessages[matchId]).sort((a, b) => a.time - b.time) : [];
+
     // Find real tournament
-    const tournament = tournaments.find(t => String(t.id) === String(id));
+    const tournament = tournaments.find(t => String(t.id) === String(matchId));
 
     useEffect(() => {
         const timer = setInterval(() => setCurrentTime(Date.now()), 1000);
@@ -30,7 +34,7 @@ const MatchRoom = () => {
     }
 
     // Security Check
-    const isPlayerJoined = entries.some(e => String(e.tournamentId) === String(id));
+    const isPlayerJoined = entries.some(e => String(e.tournamentId) === String(matchId));
 
     // Release Timer Logic
     const matchTime = new Date(`${tournament.date} ${tournament.exactTime || tournament.time}`).getTime();
@@ -62,7 +66,7 @@ const MatchRoom = () => {
         if (!uidForm.name || !uidForm.uid) return alert("Please fill all fields");
 
         setIsSubmitting(true);
-        const success = await submitLateUID(id, `user_${Date.now()}`, uidForm.name, uidForm.uid);
+        const success = await submitLateUID(matchId, `user_${Date.now()}`, uidForm.name, uidForm.uid);
         setIsSubmitting(false);
 
         if (success) {
@@ -71,6 +75,18 @@ const MatchRoom = () => {
         } else {
             alert("Failed to submit UID. Please try again.");
         }
+    };
+
+    const handleChatSubmit = (e) => {
+        e.preventDefault();
+        if (!chatMsg.trim()) return;
+        
+        sendRoomMessage(matchId, {
+            sender: "Player",
+            text: chatMsg,
+            role: "player"
+        });
+        setChatMsg('');
     };
 
     return (
@@ -90,7 +106,7 @@ const MatchRoom = () => {
                         <Lock size={48} className="text-danger mb-3 mx-auto" />
                         <h2 className="text-xl font-bold mb-2">Access Denied</h2>
                         <p className="text-muted mb-4">You must join this tournament to see the Room ID and Password.</p>
-                        <Link to={`/tournament/${id}`} className="btn btn-primary">Join Tournament</Link>
+                        <Link to={`/tournament/${matchId}`} className="btn btn-primary">Join Tournament</Link>
                     </div>
                 ) : isCompleted ? (
                     <div className="winners-announcement glass-panel p-5 text-center fade-in">
@@ -185,7 +201,39 @@ const MatchRoom = () => {
                             )}
                         </div>
 
-                        {/* UID SUBMISSION PANEL (New feature) */}
+                        {/* LIVE CHAT & UPDATES PANEL */}
+                        <div className="glass-panel room-card chat-card fade-in">
+                            <h3 className="card-title mb-4 flex align-center text-primary">
+                                <Medal size={24} className="mr-2" /> Live Match Feed
+                            </h3>
+                            <div className="chat-messages" style={{ height: '300px', overflowY: 'auto', marginBottom: '15px', paddingRight: '10px' }}>
+                                {roomMessages.length === 0 ? (
+                                    <p className="text-muted text-center py-5">No messages yet. Start the conversation!</p>
+                                ) : (
+                                    roomMessages.map((msg, idx) => (
+                                        <div key={idx} className={`chat-bubble mb-3 ${msg.role === 'admin' ? 'admin' : ''}`}>
+                                            <div className="d-flex justify-between align-center mb-1">
+                                                <span className="chat-sender text-xs font-bold">{msg.role === 'admin' ? '🛡️ Admin' : msg.sender}</span>
+                                                <span className="text-xxs text-muted">{new Date(msg.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                            </div>
+                                            <p className="chat-text m-0 p-2 rounded bg-dark-soft text-sm">{msg.text}</p>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                            <form onSubmit={handleChatSubmit} className="d-flex gap-2">
+                                <input
+                                    type="text"
+                                    className="flex-grow-1 bg-dark-soft border-secondary p-2 rounded text-white"
+                                    placeholder="Type a message..."
+                                    value={chatMsg}
+                                    onChange={(e) => setChatMsg(e.target.value)}
+                                />
+                                <button type="submit" className="btn btn-primary btn-sm"><Send size={16} /></button>
+                            </form>
+                        </div>
+
+                        {/* UID SUBMISSION PANEL */}
                         {isReleased && !isCompleted && (
                             <div className="glass-panel room-card uid-submission-card fade-in">
                                 <h3 className="card-title mb-4 flex align-center text-primary">

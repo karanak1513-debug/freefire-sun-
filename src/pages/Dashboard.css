@@ -91,3 +91,20 @@
     transform: translateY(-5px);
     border-color: rgba(var(--color-primary-rgb), 0.3);
 }
+
+.modal-overlay {
+    backdrop-filter: blur(10px);
+    background: rgba(0, 0, 0, 0.8);
+}
+
+.modal-content {
+    border-top: 4px solid var(--primary);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+}
+
+.text-gradient {
+    background: linear-gradient(to right, var(--primary), #ffffff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}

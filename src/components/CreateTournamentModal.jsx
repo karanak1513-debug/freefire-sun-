@@ -39,28 +39,33 @@ const CreateTournamentModal = ({ onClose }) => {
         }
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
+        try {
+            // Structure the custom prizes array
+            const customPrizes = [
+                { rank: "1st Prize", amount: formData.prize1 },
+                { rank: "2nd Prize", amount: formData.prize2 },
+                { rank: "3rd Prize", amount: formData.prize3 }
+            ];
 
-        // Structure the custom prizes array
-        const customPrizes = [
-            { rank: "1st Prize", amount: formData.prize1 },
-            { rank: "2nd Prize", amount: formData.prize2 },
-            { rank: "3rd Prize", amount: formData.prize3 }
-        ];
+            if (formData.prizeKill) {
+                customPrizes.push({ rank: "Per Kill", amount: formData.prizeKill });
+            }
 
-        if (formData.prizeKill) {
-            customPrizes.push({ rank: "Per Kill", amount: formData.prizeKill });
+            const finalData = {
+                ...formData,
+                prizes: customPrizes
+            };
+
+            console.log("Creating tournament with data:", finalData);
+            await createTournament(finalData);
+            alert('✅ Tournament Created Successfully!');
+            onClose();
+        } catch (error) {
+            console.error("Failed to create tournament:", error);
+            alert(`❌ Error creating tournament: ${error.message || 'Check Firestore permissions'}`);
         }
-
-        const finalData = {
-            ...formData,
-            prizes: customPrizes
-        };
-
-        createTournament(finalData);
-        alert('Tournament Created Successfully!');
-        onClose();
     };
 
     return (
