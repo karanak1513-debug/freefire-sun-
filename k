@@ -1,0 +1,1 @@
+/app/tournaments/page.js
