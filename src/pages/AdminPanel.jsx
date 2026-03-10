@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { LayoutDashboard, Users as UsersIcon, Swords, Trophy, DollarSign, Settings, Plus, Search, Edit2, Trash2, XCircle, Play, Square, Key, Award, CheckCircle, X, Eye, Send } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { useAuth } from '../context/AuthContext';
 import CreateTournamentModal from '../components/CreateTournamentModal';
 import './AdminPanel.css';
 
@@ -26,6 +27,8 @@ const AdminPanel = () => {
         approvePayment,
         rejectPayment
     } = useApp();
+
+    const { userData, logout } = useAuth();
 
     const handleSetRoom = (tId) => {
         const roomId = prompt("Enter Room ID:");
@@ -87,8 +90,8 @@ const AdminPanel = () => {
                     <div className="admin-header glass-panel mb-4">
                         <h2 className="admin-title text-capitalize">{activeTab} Management</h2>
                         <div className="admin-profile">
-                            <span className="text-muted mr-3">Super Admin</span>
-                            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=admin" alt="Admin" className="admin-avatar" />
+                            <span className="text-muted mr-3">{userData?.username || 'Admin'}</span>
+                            <img src={userData?.profilePhoto || "https://api.dicebear.com/7.x/avataaars/svg?seed=admin"} alt="Admin" className="admin-avatar" />
                         </div>
                     </div>
 

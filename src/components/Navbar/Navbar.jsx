@@ -1,18 +1,18 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, X, LogIn, LogOut, Shield } from 'lucide-react';
+import { Menu, X, LogIn, LogOut, Shield, User } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import './Navbar.css';
 
 const Navbar = () => {
     const [isOpen, setIsOpen] = useState(false);
-    const { isAdmin, logoutAdmin } = useAuth();
+    const { isAdmin, currentUser, userData, logout } = useAuth();
     const navigate = useNavigate();
 
     const toggleMenu = () => setIsOpen(!isOpen);
 
-    const handleLogout = () => {
-        logoutAdmin();
+    const handleLogout = async () => {
+        await logout();
         setIsOpen(false);
         navigate('/');
     };
@@ -29,7 +29,14 @@ const Navbar = () => {
                     <Link to="/" onClick={() => setIsOpen(false)}>Home</Link>
                     <Link to="/tournaments" onClick={() => setIsOpen(false)}>Tournaments</Link>
                     <Link to="/leaderboard" onClick={() => setIsOpen(false)}>Leaderboard</Link>
-                    <Link to="/admin/tutorial" onClick={() => setIsOpen(false)}>Tutorial / How to Create Tournament</Link>
+                    <Link to="/admin/tutorial" onClick={() => setIsOpen(false)}>How to Play</Link>
+                    
+                    {currentUser && (
+                        <Link to="/dashboard" onClick={() => setIsOpen(false)} className="mobile-only">
+                            Dashboard
+                        </Link>
+                    )}
+
                     {isAdmin && (
                         <Link to="/admin" onClick={() => setIsOpen(false)} className="text-warning flex align-center d-flex gap-2">
                             <Shield size={16} /> Admin Panel
@@ -38,13 +45,18 @@ const Navbar = () => {
                 </div>
 
                 <div className="nav-actions desktop-only">
-                    {isAdmin ? (
-                        <button className="btn btn-outline btn-sm d-flex align-center gap-2" onClick={handleLogout}>
-                            <LogOut size={16} /> Logout
-                        </button>
+                    {currentUser ? (
+                        <div className="d-flex align-center gap-4">
+                            <Link to="/dashboard" className="nav-profile-link d-flex align-center gap-2">
+                                <User size={18} /> {userData?.username || 'Profile'}
+                            </Link>
+                            <button className="btn btn-outline btn-sm d-flex align-center gap-2" onClick={handleLogout}>
+                                <LogOut size={16} /> Logout
+                            </button>
+                        </div>
                     ) : (
                         <Link to="/login" className="btn btn-primary btn-sm d-flex align-center gap-2">
-                            <LogIn size={16} /> Admin Login
+                            <LogIn size={16} /> Login
                         </Link>
                     )}
                 </div>

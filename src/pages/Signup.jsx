@@ -1,29 +1,31 @@
 import React, { useState } from 'react';
-import { Shield, Lock, Eye, EyeOff, Mail, Globe, ArrowRight } from 'lucide-react';
+import { User, Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import './Login.css';
+import './Login.css'; // Reusing Login styles for consistency
 
-const Login = () => {
+const Signup = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [username, setUsername] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const { login, googleLogin, isAdmin } = useAuth();
+    const { signup } = useAuth();
     const navigate = useNavigate();
 
-    const handleLogin = async (e) => {
+    const handleSignup = async (e) => {
         e.preventDefault();
         setError('');
-        setIsLoading(true);
 
+        if (password !== confirmPassword) {
+            return setError('Passwords do not match');
+        }
+
+        setIsLoading(true);
         try {
-            await login(email, password);
-            // Check if user is admin after login
-            // Note: isAdmin is updated in AuthContext on state change
-            // We'll trust the context to handle redirection in a useEffect if needed, 
-            // but for simple flow, we can just navigate to dashboard and let routes handle it.
+            await signup(email, password, username);
             navigate('/dashboard');
         } catch (err) {
             setError(err.message.replace('Firebase:', ''));
@@ -32,25 +34,15 @@ const Login = () => {
         }
     };
 
-    const handleGoogleLogin = async () => {
-        setError('');
-        try {
-            await googleLogin();
-            navigate('/dashboard');
-        } catch (err) {
-            setError(err.message.replace('Firebase:', ''));
-        }
-    };
-
     return (
         <div className="login-page fade-in d-flex justify-center align-center">
             <div className="glass-panel login-card">
                 <div className="text-center mb-5">
                     <div className="auth-icon-wrapper mb-3">
-                        <Shield className="text-primary" size={48} />
+                        <User className="text-primary" size={48} />
                     </div>
-                    <h2 className="font-bold text-2xl text-gradient">Welcome Back</h2>
-                    <p className="text-muted text-sm mt-2">Login to your FireBattle account</p>
+                    <h2 className="font-bold text-2xl text-gradient">Create Account</h2>
+                    <p className="text-muted text-sm mt-2">Join the FireBattle community</p>
                 </div>
 
                 {error && (
@@ -59,7 +51,22 @@ const Login = () => {
                     </div>
                 )}
 
-                <form onSubmit={handleLogin}>
+                <form onSubmit={handleSignup}>
+                    <div className="form-group mb-4">
+                        <label className="text-sm text-muted mb-2 d-block">Username</label>
+                        <div className="password-input-wrapper">
+                            <User className="input-icon" size={18} />
+                            <input
+                                type="text"
+                                className="form-control glass-input with-icon"
+                                placeholder="Choose a username"
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value)}
+                                required
+                            />
+                        </div>
+                    </div>
+
                     <div className="form-group mb-4">
                         <label className="text-sm text-muted mb-2 d-block">Email Address</label>
                         <div className="password-input-wrapper">
@@ -75,14 +82,14 @@ const Login = () => {
                         </div>
                     </div>
 
-                    <div className="form-group mb-2 position-relative">
+                    <div className="form-group mb-4">
                         <label className="text-sm text-muted mb-2 d-block">Password</label>
                         <div className="password-input-wrapper">
                             <Lock className="input-icon" size={18} />
                             <input
                                 type={showPassword ? "text" : "password"}
                                 className="form-control glass-input with-icon"
-                                placeholder="Enter password"
+                                placeholder="Create password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
@@ -97,39 +104,36 @@ const Login = () => {
                         </div>
                     </div>
 
-                    <div className="text-right mb-4">
-                        <Link to="/forgot-password" size="sm" className="text-xs text-primary hover-underline">
-                            Forgot Password?
-                        </Link>
+                    <div className="form-group mb-5">
+                        <label className="text-sm text-muted mb-2 d-block">Confirm Password</label>
+                        <div className="password-input-wrapper">
+                            <Lock className="input-icon" size={18} />
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                className="form-control glass-input with-icon"
+                                placeholder="Confirm your password"
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                required
+                            />
+                        </div>
                     </div>
 
                     <button 
                         type="submit" 
-                        className="btn btn-primary w-100 btn-glow d-flex align-center justify-center gap-2 mb-3"
+                        className="btn btn-primary w-100 btn-glow d-flex align-center justify-center gap-2"
                         disabled={isLoading}
                     >
-                        {isLoading ? 'Logging in...' : (
+                        {isLoading ? 'Creating Account...' : (
                             <>
-                                Login <ArrowRight size={18} />
+                                Sign Up <ArrowRight size={18} />
                             </>
                         )}
                     </button>
 
-                    <div className="divider mb-3">
-                        <span>OR</span>
-                    </div>
-
-                    <button 
-                        type="button" 
-                        onClick={handleGoogleLogin}
-                        className="btn glass-btn w-100 d-flex align-center justify-center gap-2"
-                    >
-                        <Globe size={18} /> Continue with Google
-                    </button>
-
                     <div className="text-center mt-4">
                         <p className="text-sm text-muted">
-                            Don't have an account? <Link to="/signup" className="text-primary font-medium">Sign Up</Link>
+                            Already have an account? <Link to="/login" className="text-primary font-medium">Login</Link>
                         </p>
                     </div>
                 </form>
@@ -138,4 +142,4 @@ const Login = () => {
     );
 };
 
-export default Login;
+export default Signup;

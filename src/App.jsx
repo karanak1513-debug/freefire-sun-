@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Home from './pages/Home';
 import Tournaments from './pages/Tournaments';
 import Leaderboard from './pages/Leaderboard';
@@ -8,18 +8,28 @@ import AdminPanel from './pages/AdminPanel';
 import AdminTutorial from './pages/AdminTutorial';
 import HowToPlay from './pages/HowToPlay';
 import Login from './pages/Login';
+import Signup from './pages/Signup';
+import ForgotPassword from './pages/ForgotPassword';
+import Dashboard from './pages/Dashboard';
 import Navbar from './components/Navbar/Navbar';
 import Footer from './components/Footer/Footer';
 import { useAuth } from './context/AuthContext';
-import { Navigate } from 'react-router-dom';
 import './App.css';
 
-// Protected Route Component for Admin Area
+// Protected Route for any authenticated user
+const ProtectedRoute = ({ children }) => {
+  const { currentUser, isLoading } = useAuth();
+  if (isLoading) return <div className="loading-screen">Loading...</div>;
+  if (!currentUser) return <Navigate to="/login" replace />;
+  return children;
+};
+
+// Protected Route for Admin only
 const AdminRoute = ({ children }) => {
-  const { isAdmin, isLoading } = useAuth();
+  const { isAdmin, isLoading, currentUser } = useAuth();
 
   if (isLoading) return <div className="loading-screen text-center p-5">Loading Admin Access...</div>;
-  if (!isAdmin) return <Navigate to="/login" replace />;
+  if (!currentUser || !isAdmin) return <Navigate to="/login" replace />;
 
   return children;
 };
@@ -37,6 +47,16 @@ function App() {
             <Route path="/tournament/:id" element={<TournamentDetails />} />
             <Route path="/match-room/:id" element={<MatchRoom />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/how-to-play" element={<HowToPlay />} />
+
+            {/* Protected User Routes */}
+            <Route path="/dashboard" element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            } />
 
             {/* Protected Admin Routes */}
             <Route path="/admin" element={
@@ -49,9 +69,6 @@ function App() {
                 <AdminTutorial />
               </AdminRoute>
             } />
-
-            <Route path="/how-to-play" element={<HowToPlay />} />
-            {/* Other routes will be added here */}
           </Routes>
         </main>
         <Footer />
@@ -59,5 +76,7 @@ function App() {
     </Router>
   );
 }
+
+export default App;
 
 export default App;
